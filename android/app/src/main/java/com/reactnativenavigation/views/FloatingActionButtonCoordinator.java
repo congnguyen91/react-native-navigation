@@ -9,7 +9,7 @@ import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
-import android.util.Log;
+import android.support.design.widget.FloatingActionButton;
 import android.view.Gravity;
 import android.view.View;
 
@@ -28,28 +28,21 @@ class FloatingActionButtonCoordinator {
     private static final int INITIAL_EXPENDED_FAB_ROTATION = -90;
     private CoordinatorLayout parent;
     private FabParams params;
-    private FloatingActionButtonWrapper collapsedFab;
-    private FloatingActionButtonWrapper expendedFab;
-    private final int crossFadeAnimationDuration;
+
+    private FloatingActionButton collapsedFab;
+    private FloatingActionButton expendedFab;
     private final int actionSize;
-    private final int fabSize;
     private final int margin = (int) ViewUtils.convertDpToPixel(16);
-    private final int labelRightSpacing = (int) ViewUtils.convertDpToPixel(20);
     private FloatingActionButtonAnimator fabAnimator;
-    private final ArrayList<FloatingActionButtonWrapper> actions;
-    private final ArrayList<FloatingActionButtonLabel> labels;
+    private final ArrayList<FloatingActionButton> actions;
 
     FloatingActionButtonCoordinator(CoordinatorLayout parent) {
         this.parent = parent;
         actions = new ArrayList<>();
-        labels = new ArrayList<>();
-        crossFadeAnimationDuration = parent.getResources().getInteger(android.R.integer.config_shortAnimTime);
         actionSize = (int) ViewUtils.convertDpToPixel(40);
-        fabSize = (int) ViewUtils.convertDpToPixel(56);
     }
 
     public void add(final FabParams params) {
-        Log.i(TAG, "add() called with: params = [" + params + "]");
         if (hasFab()) {
             remove(new Runnable() {
                 @Override
@@ -67,7 +60,7 @@ class FloatingActionButtonCoordinator {
         createCollapsedFab();
         createExpendedFab();
         setStyle();
-        fabAnimator = new FloatingActionButtonAnimator(collapsedFab, expendedFab, crossFadeAnimationDuration);
+        fabAnimator = new FloatingActionButtonAnimator(collapsedFab, expendedFab);
         fabAnimator.show();
     }
 
@@ -103,15 +96,11 @@ class FloatingActionButtonCoordinator {
         parent.removeView(expendedFab);
         collapsedFab = null;
         expendedFab = null;
-        for (FloatingActionButtonWrapper action : actions) {
+        for (FloatingActionButton action : actions) {
             ((CoordinatorLayout.LayoutParams) action.getLayoutParams()).setBehavior(null);
             parent.removeView(action);
         }
-        for (FloatingActionButtonLabel label: labels) {
-            parent.removeView(label);
-        }
         actions.clear();
-        labels.clear();
     }
 
     private void createCollapsedFab() {
@@ -144,8 +133,8 @@ class FloatingActionButtonCoordinator {
         });
     }
 
-    private FloatingActionButtonWrapper createFab(Drawable icon) {
-        FloatingActionButtonWrapper fab = new FloatingActionButtonWrapper(parent.getContext());
+    private FloatingActionButton createFab(Drawable icon) {
+        FloatingActionButton fab = new FloatingActionButton(parent.getContext());
         fab.setId(ViewUtils.generateViewId());
         fab.setImageDrawable(icon);
         return fab;
@@ -171,23 +160,15 @@ class FloatingActionButtonCoordinator {
         }
 
         for (int i = 0; i < params.actions.size(); i++) {
-            FloatingActionButtonWrapper action = createAction(i);
+            FloatingActionButton action = createAction(i);
             actions.add(action);
-
-            FloatingActionButtonLabel label = action.getLabelView();
-            labels.add(label);
-
-            if(label != null) {
-                parent.addView(label, createLabelLayoutParams(i));
-            }
-
             parent.addView(action);
         }
     }
 
-    private FloatingActionButtonWrapper createAction(int index) {
+    private FloatingActionButton createAction(int index) {
         final FabActionParams actionParams = params.actions.get(index);
-        FloatingActionButtonWrapper action = createFab(actionParams.icon);
+        FloatingActionButton action = createFab(actionParams.icon);
 
         final View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
@@ -196,25 +177,11 @@ class FloatingActionButtonCoordinator {
                 fabAnimator.collapse();
             }
         };
-
-        if(actionParams.title != null) {
-            FloatingActionButtonLabel buttonLabel =  new FloatingActionButtonLabel(parent.getContext());
-            buttonLabel.setOnClickListener(onClickListener);
-            buttonLabel.setBackgroundColor(actionParams.titleBackgroundColor.getColor());
-            buttonLabel.setTextColor(actionParams.titleColor.getColor());
-
-            action.setTag(R.id.fab_label, buttonLabel);
-            action.setTitle(actionParams.title);
-        }
-
-        action.setLayoutParams(createActionLayoutParams(index));
-        action.setOnClickListener(onClickListener);
-
         if (actionParams.backgroundColor.hasColor()) {
             action.setBackgroundTintList(ColorStateList.valueOf(actionParams.backgroundColor.getColor()));
         }
 
-        action.setSize(FloatingActionButtonWrapper.SIZE_MINI);
+        action.setSize(FloatingActionButton.SIZE_MINI);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             action.setCompatElevation(0);
         }
@@ -231,15 +198,7 @@ class FloatingActionButtonCoordinator {
         return lp;
     }
 
-    private  CoordinatorLayout.LayoutParams createLabelLayoutParams(int actionIndex) {
-        CoordinatorLayout.LayoutParams lp = new CoordinatorLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-        lp.gravity = Gravity.RIGHT | Gravity.BOTTOM;
-        lp.rightMargin = margin + fabSize + labelRightSpacing;
-
-        return lp;
-    }
-
-    private static class ActionBehaviour extends CoordinatorLayout.Behavior<FloatingActionButtonWrapper> {
+    private static class ActionBehaviour extends CoordinatorLayout.Behavior<FloatingActionButton> {
         private final int MAX_VALUE = 90;
         private int dependencyId;
         private float yStep;
@@ -250,12 +209,12 @@ class FloatingActionButtonCoordinator {
         }
 
         @Override
-        public boolean layoutDependsOn(CoordinatorLayout parent, FloatingActionButtonWrapper child, View dependency) {
+        public boolean layoutDependsOn(CoordinatorLayout parent, FloatingActionButton child, View dependency) {
             return dependency.getId() == dependencyId;
         }
 
         @Override
-        public boolean onDependentViewChanged(CoordinatorLayout parent, FloatingActionButtonWrapper child, View dependency) {
+        public boolean onDependentViewChanged(CoordinatorLayout parent, FloatingActionButton child, View dependency) {
             final View dependentView = parent.findViewById(dependencyId);
             if (dependentView == null) {
                 return false;
@@ -268,7 +227,7 @@ class FloatingActionButtonCoordinator {
             return true;
         }
 
-        private void setVisibility(FloatingActionButtonWrapper child) {
+        private void setVisibility(FloatingActionButton child) {
             child.setVisibility(child.getAlpha() < 0.2 ? View.GONE : View.VISIBLE);
         }
 

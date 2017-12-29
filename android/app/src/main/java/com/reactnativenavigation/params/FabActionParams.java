@@ -10,4 +10,5 @@ public class FabActionParams {
     public StyleParams.Color titleColor;
     public Drawable icon;
     public StyleParams.Color backgroundColor;
+    public StyleParams.Color iconColor;
 }
