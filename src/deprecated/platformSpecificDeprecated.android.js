@@ -237,7 +237,7 @@ function convertStyleParams(originalStyleObject) {
   if (ret.topBarReactViewInitialProps) {
     const passPropsKey = _.uniqueId('customNavBarComponent');
     PropRegistry.save(passPropsKey, ret.topBarReactViewInitialProps);
-    ret.topBarReactViewInitialProps = {passPropsKey};  
+    ret.topBarReactViewInitialProps = {passPropsKey};
   }
   return ret;
 }
@@ -267,7 +267,7 @@ function convertDrawerParamsToSideMenuParams(drawerParams) {
       } else {
         result[key].fixedWidth = drawer[key].fixedWidth;
       }
-      
+
     } else {
       result[key] = null;
     }
@@ -785,6 +785,10 @@ async function getCurrentlyVisibleScreenId() {
   return await newPlatformSpecific.getCurrentlyVisibleScreenId();
 }
 
+async function getLaunchArgs() {
+  return await newPlatformSpecific.getLaunchArgs();
+}
+
 export default {
   startTabBasedApp,
   startSingleScreenApp,
@@ -817,5 +821,6 @@ export default {
   dismissContextualMenu,
   isAppLaunched,
   isRootLaunched,
-  getCurrentlyVisibleScreenId
+  getCurrentlyVisibleScreenId,
+  getLaunchArgs
 };
