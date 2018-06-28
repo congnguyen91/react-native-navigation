@@ -79,8 +79,8 @@ class Navigator {
     return Navigation.showLightBox(params);
   }
 
-  dismissLightBox(params = {}) {
-    return Navigation.dismissLightBox(params);
+  dismissLightBox() {
+    return Navigation.dismissLightBox();
   }
 
   showInAppNotification(params = {}) {
